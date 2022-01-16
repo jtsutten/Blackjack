@@ -6,6 +6,7 @@ import tailwind from 'tailwind-rn';
 import { images } from './images.js';
 import { splits, hardTotals, softTotals } from './basic_strategy.js'
 import { Hands, horizontalOffset, verticalOffset} from './hands.js'
+import * as Player from './player.js';
 
 let numPlayers = 2;
 
@@ -42,24 +43,25 @@ let valueKeys = Object.keys(values).reduce(function (acc, key) {
 
 // deal(deck, count, setCount);
 function initPlayers() {
-  return new Array(numPlayers).fill(null).flatMap(e => [[]])
+  return new Array(numPlayers).fill(new Player.Player());
 }
 
 export default function App() {
-
   const [deck, setDeck] = useState(initDeck());
   const [players, setPlayers] = useState(initPlayers());
   const [count, setCount] = useState(0);
+  const [currentPlayer, setCurrentPlayer] = useState(0);
 
   useEffect(() => {
-    deal(deck, count, setCount, players, setPlayers);
-    console.log('count in default useEffect: ' + count);
+    deal(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer);
+    // console.log('count in default useEffect: ' + count);
   }, []);
 
-  useEffect(() => { console.log('count in count useEffect: ' + count) }, [count]);
+  // useEffect(() => { console.log('count in count useEffect: ' + count) }, [count]);
 
   useEffect(() => {
-    console.log('players: ' + JSON.stringify(players));
+    console.log('players: ');
+    console.log(players);
   }, [players])
 
   return (
@@ -67,9 +69,8 @@ export default function App() {
       <View source={styles.container} style={styles.logo}>
         <Hands players={players} />
       </View>
-
       <View style={styles.actionBar}>
-        <CustomButton style={styles.buttons} title='hit' onPress={() => hit(deck, count, setCount, players, setPlayers)}></CustomButton>
+        <CustomButton style={styles.buttons} title='hit' onPress={() => hit(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer)}></CustomButton>
         <CustomButton style={styles.buttons} title='stand' onPress={() => hit(deck, count, setCount, players, setPlayers)}></CustomButton>
         <CustomButton style={styles.buttons} title='double down' onPress={() => hit(deck, count, setCount, players, setPlayers)}></CustomButton>
         <CustomButton style={styles.buttons} title='split' onPress={() => hit(deck, count, setCount, players, setPlayers)}></CustomButton>
@@ -92,33 +93,24 @@ function CustomButton(props) {
     </Pressable>
   );
 }
-function hit(deck, count, setCount, players, setPlayers) {
-  let card = deck.pop();
+
+function hit(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer) {
+  const card = deck.pop();
   setCount(incrementCardCount(card, count));
-  players[0].push(card);
-  setPlayers(players.slice());
+  const newPlayer = Player.hit(players, card, currentPlayer, setCurrentPlayer);
+  setPlayers(newPlayer);
 }
 
-function deal(deck, count, setCount, players, setPlayers) {
-  let newCount = count;
+function deal(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer) {
+  let newPlayers = {...players};
   for (let i = 0; i < numPlayers; i++) {
-    let firstCard = deck.pop();
-    console.log(firstCard);
-    newCount = incrementCardCount(firstCard, newCount);
-    console.log('new count: ' + newCount);
-    players[i].push(firstCard);
-    setPlayers(players.slice());
+    newPlayers = hit(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer);
   }
   for (let i = 0; i < numPlayers; i++) {
-    let secondCard = deck.pop();
-    console.log(secondCard);
-    newCount = incrementCardCount(secondCard, newCount);
-    console.log('new count: ' + newCount);
-    players[i].push(secondCard);
-    setPlayers(players.slice());
+    newPlayers = hit(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer);
   }
-  setCount(newCount);
-  return players;
+  setPlayers(newPlayers);
+  return newPlayers;
 }
 
 function incrementCardCount(card, count) {

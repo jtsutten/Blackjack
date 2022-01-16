@@ -20,10 +20,12 @@ function Hands(props) {
 
       return (
         <View>
-          {props.players.map((cards, i) => 
+          {props.players.map((player, i) => 
             <View key={`player-${i}`} style={styles.hands}>
-              {cards.map((card, j) => 
-                <Image style={createCardOverlap(j)}resizeMode={'contain'} key={`player-${i}-${j}`} source={displayCard(card)}/> 
+              {player.hands.map((hand, j) => 
+                hand.map((card, k) =>
+                  <Image style={createCardOverlap(k)}resizeMode={'contain'} key={`player-${i}-${j}`} source={displayCard(card)}/> 
+                )
               )}
             </View>
           )}
