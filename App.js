@@ -41,7 +41,6 @@ let valueKeys = Object.keys(values).reduce(function (acc, key) {
   return acc[values[key]] = key, acc;
 }, {});
 
-// deal(deck, count, setCount);
 function initPlayers() {
   return new Array(numPlayers).fill(new Player.Player());
 }
@@ -66,7 +65,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <View source={styles.container} style={styles.logo}>
-        <Hands players={players} />
+        <Hands players={players}/>
       </View>
       <View style={styles.actionBar}>
         <CustomButton style={styles.buttons} title='hit' onPress={() => hit(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer)}></CustomButton>
@@ -96,8 +95,9 @@ function CustomButton(props) {
 function hit(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer) {
   const card = deck.pop();
   setCount(incrementCardCount(card, count));
-  const newPlayer = Player.hit(players, card, currentPlayer, setCurrentPlayer);
-  setPlayers(newPlayer);
+  const newPlayers = Player.hit(players, card, currentPlayer, setCurrentPlayer);
+  setPlayers(newPlayers);
+  return newPlayers;
 }
 
 function deal(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer) {
