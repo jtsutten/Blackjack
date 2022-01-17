@@ -8,16 +8,23 @@ class Player {
     
 }
 function getCurrentHand(player) {
-    console.log(player);
     return player.hands[player.currentHand];
 }
 
-//return players or player?
 function hit(players, card, currentPlayer, setCurrentPlayer) {
     let newPlayers = {...players};
-    let hand = getCurrentHand(players[currentPlayer]);
+    let hand = getCurrentHand(newPlayers[currentPlayer]);
     hand.push(card);
+    setCurrentPlayer(incrementPlayerTurn(currentPlayer))
     return newPlayers;
 }
 
+function incrementPlayerTurn(currentPlayer) {
+    if (currentPlayer + 1 === window.numPlayers) {
+        return 0;
+    }
+    else {
+        return currentPlayer + 1;
+    }
+}
 export {Player, hit};

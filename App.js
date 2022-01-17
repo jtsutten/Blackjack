@@ -8,7 +8,7 @@ import { splits, hardTotals, softTotals } from './basic_strategy.js'
 import { Hands, horizontalOffset, verticalOffset} from './hands.js'
 import * as Player from './player.js';
 
-let numPlayers = 2;
+window.numPlayers = 2;
 
 let suits = {
   clubs: 0,
@@ -54,7 +54,6 @@ export default function App() {
 
   useEffect(() => {
     deal(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer);
-    // console.log('count in default useEffect: ' + count);
   }, []);
 
   // useEffect(() => { console.log('count in count useEffect: ' + count) }, [count]);
@@ -103,11 +102,11 @@ function hit(deck, count, setCount, players, setPlayers, currentPlayer, setCurre
 
 function deal(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer) {
   let newPlayers = {...players};
-  for (let i = 0; i < numPlayers; i++) {
-    newPlayers = hit(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer);
+  for (let i = 0; i < window.numPlayers; i++) {
+    newPlayers = hit(deck, count, setCount, newPlayers, setPlayers, currentPlayer, setCurrentPlayer);
   }
-  for (let i = 0; i < numPlayers; i++) {
-    newPlayers = hit(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer);
+  for (let i = 0; i < window.numPlayers; i++) {
+    newPlayers = hit(deck, count, setCount, newPlayers, setPlayers, currentPlayer, setCurrentPlayer);
   }
   setPlayers(newPlayers);
   return newPlayers;
@@ -157,6 +156,9 @@ function initDeck() {
   return shuffleArray(deck)
 }
 
+function getNumPlayers() {
+  return numPlayers;
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -221,4 +223,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export { styles }
+export { styles, getNumPlayers}

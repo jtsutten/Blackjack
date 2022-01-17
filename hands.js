@@ -3,6 +3,8 @@ import { Image, StyleSheet, Text, View } from 'react-native';
 import { images } from './images.js';
 
 function Hands(props) {
+    console.log('props')
+    console.log(props);
     // this needs to be in this func - and i couldn't access it from App.styles.cards. when I did, it double executed this func for some reason.
     const styles = StyleSheet.create({
         cards: {
