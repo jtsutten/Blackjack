@@ -92,6 +92,9 @@ function CustomButton(props) {
   );
 }
 
+//totally shouldn't need a hit() func here and in Player, but I was afraid of passing down this setPlayers and having shit update properly
+//so i deal with the setting up here. IDK if any of this matters, it is silly to have 2 hit funcs, this one just gets the card and delegates to
+//Player.hit().
 function hit(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer) {
   const card = deck.pop();
   setCount(incrementCardCount(card, count));
@@ -101,14 +104,14 @@ function hit(deck, count, setCount, players, setPlayers, currentPlayer, setCurre
 }
 
 function deal(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer) {
-  let newPlayers = {...players};
+  let newPlayers = players;//copy?? idfk man makes no diff with {...}
   for (let i = 0; i < window.numPlayers; i++) {
     newPlayers = hit(deck, count, setCount, newPlayers, setPlayers, currentPlayer, setCurrentPlayer);
   }
   for (let i = 0; i < window.numPlayers; i++) {
     newPlayers = hit(deck, count, setCount, newPlayers, setPlayers, currentPlayer, setCurrentPlayer);
   }
-  setPlayers(newPlayers);
+  // setPlayers(newPlayers); // idk if this is needed cause hit() calls setPlayers too, so it seemed redundant.
   return newPlayers;
 }
 

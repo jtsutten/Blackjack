@@ -8,14 +8,13 @@ class Player {
 }
 
 function getCurrentHand(player) {
-    console.log('idgi');
-    console.log(player.hands[player.currentHand]);
     return player.hands[player.currentHand];
 }
 
 function hit(players, card, currentPlayer, setCurrentPlayer) {
     let newPlayers = {...players};
-    let hand = {...getCurrentHand(newPlayers[currentPlayer])};
+    let hand = getCurrentHand(newPlayers[currentPlayer]);
+    hand.push(card);
     setCurrentPlayer(incrementPlayerTurn(currentPlayer))
     return newPlayers;
 }

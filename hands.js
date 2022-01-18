@@ -19,7 +19,6 @@ function Hands(props) {
         //   justifyContent: 'center'
         }
       });
-      console.log(props.players[0].hands)
       return (
         <View>
           {props.players.map((player, i) => 
