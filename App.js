@@ -5,8 +5,9 @@ import { Image, StyleSheet, Text, View, Button, Pressable, SafeAreaView } from '
 import tailwind from 'tailwind-rn';
 import { images } from './images.js';
 import { splits, hardTotals, softTotals } from './basic_strategy.js'
-import { Hands, horizontalOffset, verticalOffset} from './hands.js'
+import { Hands, horizontalOffset, verticalOffset,} from './hands.js'
 import * as Player from './player.js';
+import * as Dealer from './dealer.js';
 
 window.numPlayers = 2;
 
@@ -42,7 +43,7 @@ let valueKeys = Object.keys(values).reduce(function (acc, key) {
 }, {});
 
 function initPlayers() {
-  return new Array(numPlayers).fill(new Player.Player());
+  return new Array(window.numPlayers).fill(null).map(() => new Player.Player());
 }
 
 export default function App() {
@@ -50,9 +51,10 @@ export default function App() {
   const [players, setPlayers] = useState(initPlayers());
   const [count, setCount] = useState(0);
   const [currentPlayer, setCurrentPlayer] = useState(0);
+  const [dealer, setDealer] = useState(new Dealer.Dealer());
 
   useEffect(() => {
-    deal(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer);
+    deal(deck, count, setCount, players, setPlayers, dealer, setDealer);
   }, []);
 
   // useEffect(() => { console.log('count in count useEffect: ' + count) }, [count]);
@@ -64,21 +66,20 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <View source={styles.container} style={styles.logo}>
-        <Hands players={players}/>
+      <View>
+        <Hands players={players} dealer={dealer}/>
       </View>
       <View style={styles.actionBar}>
         <CustomButton style={styles.buttons} title='hit' onPress={() => hit(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer)}></CustomButton>
-        <CustomButton style={styles.buttons} title='stand' onPress={() => hit(deck, count, setCount, players, setPlayers)}></CustomButton>
+        <CustomButton style={styles.buttons} title='stand' onPress={() => Player.stand(players, currentPlayer, setCurrentPlayer)}></CustomButton>
         <CustomButton style={styles.buttons} title='double down' onPress={() => hit(deck, count, setCount, players, setPlayers)}></CustomButton>
-        <CustomButton style={styles.buttons} title='split' onPress={() => hit(deck, count, setCount, players, setPlayers)}></CustomButton>
+        <CustomButton style={styles.buttons} title='split' onPress={() => split(players, setPlayers, currentPlayer)}></CustomButton>
         <CustomButton style={styles.buttons} title='deal' onPress={() => hit(deck, count, setCount, players, setPlayers)}></CustomButton>
         <CustomButton style={styles.buttons} title='surrender' onPress={() => hit(deck, count, setCount, players, setPlayers)}></CustomButton>
         <View style={styles.count}>
-          <Text style={styles.count}>{count}</Text>
+          <Text style={styles.text}>{count}</Text>
         </View>
       </View>
-      
     </View>
   );
 }
@@ -103,16 +104,34 @@ function hit(deck, count, setCount, players, setPlayers, currentPlayer, setCurre
   return newPlayers;
 }
 
-function deal(deck, count, setCount, players, setPlayers, currentPlayer, setCurrentPlayer) {
-  let newPlayers = players;//copy?? idfk man makes no diff with {...}
+function split(players, setPlayers, currentPlayer) {
+  let newPlayers = Player.split(players, currentPlayer);
+  setPlayers(newPlayers);
+}
+function deal(deck, count, setCount, players, setPlayers, dealer, setDealer) {
+  let newPlayers = [...players];
+  let newDealer = {...dealer};
+  let newCount = count;
+
   for (let i = 0; i < window.numPlayers; i++) {
-    newPlayers = hit(deck, count, setCount, newPlayers, setPlayers, currentPlayer, setCurrentPlayer);
+    const card = deck.pop();
+    newPlayers[i].hands[0].push(card);
+    newCount = incrementCardCount(card, newCount);
   }
   for (let i = 0; i < window.numPlayers; i++) {
-    newPlayers = hit(deck, count, setCount, newPlayers, setPlayers, currentPlayer, setCurrentPlayer);
+    const card = deck.pop();
+    newPlayers[i].hands[0].push(card);
+    newCount = incrementCardCount(card, newCount);
   }
-  // setPlayers(newPlayers); // idk if this is needed cause hit() calls setPlayers too, so it seemed redundant.
-  return newPlayers;
+  
+  newDealer.hand.push(deck.pop());
+  newDealer.hand.push(deck.pop());
+
+  setDealer(newDealer);
+  setPlayers(newPlayers);
+  setCount(newCount);
+
+  return newPlayers; // this return isn't used, but this now affects the dealer too so it doesn't make sense. fk it keep going forward.
 }
 
 function incrementCardCount(card, count) {
@@ -147,7 +166,7 @@ function initDeck() {
   for (let i = 0; i < 4; i++) {
     for (let j = 0; j < 13; j++) {
       let value = valueKeys[j];
-      value = (value === 'jack' || value === 'queen' || value === 'king') ? '10' : values[`${value}`] + 2; // this is literally disgusting + 2 cause we start at 0... srsly fix this josh i'm gonna vom
+      value = (value === 'jack' || value === 'queen' || value === 'king') ? 10 : values[`${value}`] + 2; // this is literally disgusting + 2 cause we start at 0... srsly fix this josh i'm gonna vom
       if (value === 14) value = 'ace' //hardcode fix - don't want to turn ace into value 12 + 2 = 14.
       let suit = suitKeys[i];
       let display = valueKeys[j];
@@ -155,32 +174,23 @@ function initDeck() {
       deck.push(card);
     }
   }
-  // return deck;
-  return shuffleArray(deck)
+  return deck;
+  // return shuffleArray(deck)
 }
 
-function getNumPlayers() {
-  return numPlayers;
-}
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#fff',
+    display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cards: {
-    height: 100,
-    width: 150
-  },
-  logo: {
-    width: 305,
-    height: 159,
-    marginBottom: 10,
+    justifyContent: 'space-between',
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#666699'
   },
   hands: {
-    flexDirection: 'row',
+    flexDirection: 'row'
   },
   count: {
     float: 'left',
@@ -188,14 +198,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     float: 'left'
   },
-  actionBar: {
-    position: 'absolute',
-    bottom: '10%',
-    left: '50%',
+  actionBar: {    
+    display: 'flex',
+    // width: 400,
+    allignItems: 'center',
+    justifyContent: 'center',
     flexDirection: 'row',
-    flexWrap: 'wrap'
-    
-    // display: 'grid'
+    flexWrap: 'wrap',
+    backgroundColor: 'pink',
   },
   buttons: {
     paddingHorizontal: 8,
@@ -208,15 +218,6 @@ const styles = StyleSheet.create({
     minWidth: "48%",
     textAlign: "center", 
   },
-  // buttons: {
-  //   alignItems: 'center',
-  //   justifyContent: 'center',
-  //   paddingVertical: 12,
-  //   paddingHorizontal: 32,
-  //   borderRadius: 4,
-  //   elevation: 3,
-  //   backgroundColor: 'black',
-  // },
   text: {
     fontSize: 16,
     lineHeight: 21,
@@ -226,4 +227,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export { styles, getNumPlayers}
+export { styles}
